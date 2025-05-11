@@ -36,7 +36,7 @@ function SignupPage() {
 
       if (response.ok) {
         console.log('✅ 회원가입 성공');
-        navigate('/dashboard'); // 다음 페이지로 이동
+        navigate('/'); // 다음 페이지로 이동
       } else {
         console.error('❌ 서버 오류:', await response.text());
       }

@@ -1,15 +1,38 @@
-import React from 'react';
+import React, { useState } from 'react';
 import './LoginPage.css';
-import { Link } from 'react-router-dom';
-import { useNavigate } from 'react-router-dom';
-import logo from '../assets/logo.png'; 
+import { Link, useNavigate } from 'react-router-dom';
+import logo from '../assets/logo.png';
 
 function LoginPage() {
   const navigate = useNavigate();
 
-  const handleLogin = (e) => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+
+  const handleLogin = async (e) => {
     e.preventDefault();
-    navigate('/dashboard');
+
+    try {
+      const response = await fetch('http://172.21.214.129:3000/user/findByEmailAndPassword', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('✅ 로그인 성공:', data);
+        navigate('/dashboard'); // 로그인 성공 시 대시보드로 이동
+      } else {
+        const errorText = await response.text();
+        alert('❌ 로그인 실패: ' + errorText);
+      }
+    } catch (error) {
+      console.error('❌ 로그인 에러:', error);
+      alert('서버 연결에 실패했습니다.');
+    }
   };
 
   return (
@@ -20,10 +43,20 @@ function LoginPage() {
 
         <form className="login-form" onSubmit={handleLogin}>
           <label>이메일</label>
-          <input type="email" placeholder="이메일" />
+          <input
+            type="email"
+            placeholder="이메일"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
 
           <label>비밀번호</label>
-          <input type="password" placeholder="비밀번호" />
+          <input
+            type="password"
+            placeholder="비밀번호"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
 
           <button type="submit" className="login-btn">로그인</button>
         </form>
