@@ -1,20 +1,54 @@
-// ExamPage.js
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import './DashboardPage.css';
 import logo from '../assets/logo.png';
 import profile from '../assets/profile.jpg';
 
-const mockExamData = Array.from({ length: 12 }, (_, i) => ({
-  id: String(1000 + i),
-  name: '김이름',
-  birth: '만 8세 / 2017.3.15',
-  status: i % 2 === 0 ? '완료' : '진행예정',
-  date: '2025.04.25',
-}));
-
 function ExamPage() {
-    const navigate = useNavigate();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const user = location.state?.user;
+  const userId = user?.id;
+  const userName = user?.name || '김이름';
+  const [searchTerm, setSearchTerm] = useState('');
+
+  const [examList, setExamList] = useState([]);
+
+  useEffect(() => {
+    const fetchExams = async () => {
+      if (!userId) return;
+
+      try {
+        const response = await fetch(`http://172.21.214.129:3000/test/getAllTestsByUser?userid=${userId}`);
+        if (!response.ok) throw new Error('서버 요청 실패');
+
+        const data = await response.json();
+
+        const processed = data.map(test => {
+          const ssnFront = test.ssn?.split('-')[0] || '';
+          return {
+            id: test.childid,
+            name: test.childname,
+            birth: ssnFront,
+            status: test.isCompleted ? '완료' : '진행예정',
+            date: test.isCompleted ? test.completedDate : '',
+            isCompleted: test.isCompleted
+          };
+        });
+
+        setExamList(processed);
+      } catch (error) {
+        console.error('❌ 검사 목록 불러오기 실패:', error);
+      }
+    };
+
+    fetchExams();
+  }, [userId]);
+
+  const filteredList = examList.filter(exam =>
+    exam.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   return (
     <div className="dashboard">
       <div className="global-top-bar">
@@ -25,10 +59,10 @@ function ExamPage() {
         <div className="sidebar">
           <div className="sidebar-user">
             <img src={profile} alt="profile" className="user-avatar" />
-            <div className="user-name">김이름 님</div>
+            <div className="user-name">{userName} 님</div>
           </div>
           <nav className="nav-menu">
-            <button className="nav-button" onClick={() => navigate('/dashboard')}>home</button>
+            <button className="nav-button" onClick={() => navigate('/dashboard', { state: { userData: user } })}>home</button>
             <button className="nav-button active">검사</button>
             <button className="nav-button" onClick={() => navigate('/mypage')}>마이페이지</button>
           </nav>
@@ -36,7 +70,13 @@ function ExamPage() {
 
         <div className="main-area">
           <div className="sub-header">
-            <input type="text" placeholder="환자검색" className="search-input" />
+            <input
+              type="text"
+              placeholder="환자검색"
+              className="search-input"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
             <button className="add-button2">환자추가</button>
           </div>
 
@@ -54,7 +94,7 @@ function ExamPage() {
                 </tr>
               </thead>
               <tbody>
-                {mockExamData.map((exam) => (
+                {filteredList.map((exam) => (
                   <tr key={exam.id}>
                     <td>{exam.id}</td>
                     <td>{exam.name}</td>
@@ -66,7 +106,7 @@ function ExamPage() {
                     </td>
                     <td>{exam.date}</td>
                     <td>
-                      {exam.status === '완료' && (
+                      {exam.isCompleted && (
                         <button className="nav-button" onClick={() => navigate('/result-page')}>검사 보기</button>
                       )}
                     </td>

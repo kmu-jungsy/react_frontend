@@ -11,36 +11,78 @@ function DashboardPage() {
   const location = useLocation();
   const navigate = useNavigate();
   const [openDropdownId, setOpenDropdownId] = useState(null);
+  const user = location.state?.userData;
+  const userName = user?.name || '김이름';
+  const userId = user?.id;
 
   useEffect(() => {
-    const stored = localStorage.getItem('patients');
-    if (stored) {
-      setPatients(JSON.parse(stored));
-    }
-  }, []);
+    const fetchPatients = async () => {
+      if (!userId) return;
 
-  useEffect(() => {
-    const newPatient = location.state;
-    if (newPatient && newPatient.id) {
-      setPatients((prev) => {
-        const alreadyExists = prev.some((p) => p.id === newPatient.id);
-        const updated = !alreadyExists ? [...prev, newPatient] : prev;
-        localStorage.setItem('patients', JSON.stringify(updated));
-        return updated;
+      try {
+        const response = await fetch(`http://172.21.214.129:3000/child/getAllChildrenByUser?userid=${userId}`);
+        if (!response.ok) {
+          throw new Error('서버 응답 실패');
+        }
+        const data = await response.json();
+
+        const processedPatients = data.map((child) => {
+        const ssnFront = child.ssn?.split('-')[0] || '';
+        const age = calculateAge(ssnFront);
+        return {
+          id: child.id,
+          name: child.name,
+          birth: ssnFront,
+          age: age,
+          ssn: child.ssn
+        };
       });
-      navigate('.', { replace: true });
-    }
-  }, [location.state]);
+
+        setPatients(processedPatients);
+      } catch (error) {
+        console.error('❌ 환자 목록 불러오기 실패:', error);
+      }
+    };
+
+    fetchPatients();
+  }, [userId]);
 
   const handleAddPatient = () => {
-    navigate('/add-patient');
+    navigate('/add-patient', {
+      state: { userData: user }
+    });
   };
 
-  const handleDelete = (id) => {
-    const updated = patients.filter(p => p.id !== id);
-    setPatients(updated);
-    localStorage.setItem('patients', JSON.stringify(updated));
+  const handleDelete = async (id) => {
+    const patient = patients.find(p => p.id === id);
+    if (!patient) return;
+
+     try {
+      const response = await fetch('http://172.21.214.129:3000/child/deleteChild', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ssn: patient.ssn, 
+          userid: userId
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(await response.text());
+      }
+
+      // 삭제 성공 후 목록 갱신
+      const updated = patients.filter(p => p.id !== id);
+      setPatients(updated);
+      console.log('✅ 환자 삭제 성공');
+    } catch (error) {
+      console.error('❌ 환자 삭제 실패:', error);
+      alert('삭제에 실패했습니다: ' + error.message);
+    }
   };
+
 
   const toggleDropdown = (id) => {
     setOpenDropdownId(prev => (prev === id ? null : id));
@@ -49,6 +91,45 @@ function DashboardPage() {
   const filteredPatients = patients.filter((p) =>
     p.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const calculateAge = (front) => {
+    if (front.length !== 6) return '';
+    const birthYear = parseInt(front.substring(0, 2), 10);
+    const fullYear = birthYear > 24 ? 1900 + birthYear : 2000 + birthYear;
+    const birthDate = new Date(`${fullYear}-${front.substring(2, 4)}-${front.substring(4, 6)}`);
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const m = today.getMonth() - birthDate.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) age--;
+    return age;
+  };
+
+  const handleCreateTest = async (childId) => {
+    try {
+      const response = await fetch('http://172.21.214.129:3000/test/createTest', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userid: userId,
+          childid: childId,
+          isCompleted: false,
+          completedDate: null
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(await response.text());
+      }
+
+      console.log('✅ 검사 생성 성공');
+      alert('검사가 성공적으로 생성되었습니다.');
+    } catch (error) {
+      console.error('❌ 검사 생성 실패:', error);
+      alert('검사 생성에 실패했습니다: ' + error.message);
+    }
+  };
 
   return (
     <div className="dashboard">
@@ -60,11 +141,11 @@ function DashboardPage() {
         <div className="sidebar">
           <div className="sidebar-user">
             <img src={profile} alt="profile" className="user-avatar" />
-            <div className="user-name">김이름 님</div>
+            <div className="user-name">{userName} 님</div>
           </div>
           <nav className="nav-menu">
             <button className="nav-button active">home</button>
-            <button className="nav-button" onClick={() => navigate('/exam')}>검사</button>
+            <button className="nav-button" onClick={() => navigate('/exam', { state: { user } })}>검사</button>
             <button className="nav-button" onClick={() => navigate('/mypage')}>마이페이지</button>
           </nav>
         </div>
@@ -93,7 +174,7 @@ function DashboardPage() {
                       <button className="menu-button" onClick={() => toggleDropdown(p.id)}>⋮</button>
                       {openDropdownId === p.id && (
                         <div className="dropdown-content">
-                          <button onClick={() => alert('수정 기능은 추후 구현됩니다.')}>정보 수정하기</button>
+                          <button onClick={() => handleCreateTest(p.id)}>검사 생성하기</button>
                           <button onClick={() => handleDelete(p.id)}>환자 삭제하기</button>
                         </div>
                       )}

@@ -26,7 +26,7 @@ function SignupPage() {
     e.preventDefault();
 
     try {
-      const response = await fetch('http://106.101.131.67:3000/user/createUser ', {
+      const response = await fetch('http://172.21.214.129:3000/user/createUser', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

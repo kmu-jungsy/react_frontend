@@ -24,7 +24,7 @@ function LoginPage() {
       if (response.ok) {
         const data = await response.json();
         console.log('✅ 로그인 성공:', data);
-        navigate('/dashboard'); // 로그인 성공 시 대시보드로 이동
+        navigate('/dashboard', { state: { userData: data } });
       } else {
         const errorText = await response.text();
         alert('❌ 로그인 실패: ' + errorText);

@@ -1,11 +1,14 @@
 import React, { useState } from 'react';
 import { useDaumPostcodePopup } from 'react-daum-postcode';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import './AddPatientPage.css';
 import logo from '../assets/logo.png';
 import { v4 as uuidv4 } from 'uuid';
 
 const AddPatientPage = () => {
+  const location = useLocation();
+  const userData = location.state?.userData;
+  const userid = userData?.id;
   const [formData, setFormData] = useState({
     name: '',
     gender: '',
@@ -39,32 +42,39 @@ const AddPatientPage = () => {
     setFormData({ ...formData, [name]: value });
   };
 
-  const handleSubmit = () => {
-    const name = formData.name;
-    const birth = formData.idFront;
-    const age = calculateAge(birth);
-    const id = uuidv4(); 
-  
-    navigate('/dashboard', {
-      state: {
-        id,
-        name,
-        age,
-        birth,
-      },
-    });
-  };
+  const handleSubmit = async () => {
+    const ssn = `${formData.idFront}-${formData.idBack}`;
+    const requestData = {
+      name: formData.name,
+      gender: formData.gender === '남자' ? 'male' : 'female',
+      ssn: ssn,
+      address: formData.address,
+      phone_no: formData.phone,
+      userid: userid,
+      personal_history_family: formData.background
+    };
 
-  const calculateAge = (front) => {
-    if (front.length < 6) return '';
-    const birthYear = parseInt(front.substring(0, 2), 10);
-    const fullYear = birthYear > 24 ? 1900 + birthYear : 2000 + birthYear;
-    const birthDate = new Date(`${fullYear}-${front.substring(2, 4)}-${front.substring(4, 6)}`);
-    const today = new Date();
-    let age = today.getFullYear() - birthDate.getFullYear();
-    const m = today.getMonth() - birthDate.getMonth();
-    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) age--;
-    return age;
+    try {
+      const response = await fetch('http://172.21.214.129:3000/child/createChild', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestData),
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        console.log('✅ 환자 추가 성공:', result);
+        navigate('/dashboard', { state: { userData } });
+      } else {
+        const error = await response.text();
+        alert('❌ 환자 추가 실패: ' + error);
+      }
+    } catch (error) {
+      console.error('❌ 네트워크 오류:', error);
+      alert('서버 연결 실패');
+    }
   };
 
   return (
