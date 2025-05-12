@@ -146,7 +146,6 @@ function DashboardPage() {
           <nav className="nav-menu">
             <button className="nav-button active">home</button>
             <button className="nav-button" onClick={() => navigate('/exam', { state: { user } })}>검사</button>
-            <button className="nav-button" onClick={() => navigate('/mypage')}>마이페이지</button>
           </nav>
         </div>
 
@@ -174,7 +173,6 @@ function DashboardPage() {
                       <button className="menu-button" onClick={() => toggleDropdown(p.id)}>⋮</button>
                       {openDropdownId === p.id && (
                         <div className="dropdown-content">
-                          <button onClick={() => handleCreateTest(p.id)}>검사 생성하기</button>
                           <button onClick={() => handleDelete(p.id)}>환자 삭제하기</button>
                         </div>
                       )}
@@ -183,7 +181,7 @@ function DashboardPage() {
                   <p>나이: {p.age}세</p>
                   <p>생년월일: {p.birth}</p>
 
-                  <button className="report-button" onClick={() => navigate('/report')}>보고서 작성</button>
+                  <button className="report-button" onClick={() => handleCreateTest(p.id)}>검사 생성하기</button>
                 </div>
               ))
             )}
