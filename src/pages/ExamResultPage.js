@@ -86,7 +86,7 @@ function ExamResultPage() {
                 </button>
               ))}
             </div>
-            <button className="video-button black">🎥 영상 확인하기</button>
+            <button className="video-button black" onClick={() => navigate('/video', { state: { user, exam } })}>🎥 영상 확인하기</button>
           </div>
 
           <div className="drawing-container">

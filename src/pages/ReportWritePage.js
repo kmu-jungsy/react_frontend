@@ -6,6 +6,10 @@ import baby_profile from '../assets/baby_profile.jpg';
 import logo from '../assets/logo.png';
 
 function ReportWritePage() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const exam = location.state?.exam;
+  const user = location.state?.user;
   const [selectedIcon, setSelectedIcon] = useState(0);
   const iconButtons = ['🏠', '🌳', '👦', '👧'];
 
@@ -21,8 +25,8 @@ function ReportWritePage() {
           <div className="report-left-panel">
             <img src={baby_profile} alt="baby_profile" className="side-profile" />
             <div className="side-name-age">
-              <div className="name">김이름</div>
-              <div className="age">만 7세</div>
+              <div className="name">{exam?.name}</div>
+              <div className="age">만 {exam?.birth}세</div>
             </div>
             <div className="icon-button-group">
               {iconButtons.map((icon, index) => (
@@ -61,10 +65,6 @@ function ReportWritePage() {
                     <td><input type="text" className="full-width-input" /></td>
                     <td>생년월일</td>
                     <td><input type="text" className="full-width-input" /></td>
-                  </tr>
-                  <tr>
-                    <td>학교(학년)</td>
-                    <td colSpan="3"><input type="text" className="full-width-input" /></td>
                   </tr>
                   <tr>
                     <td>검사일</td>

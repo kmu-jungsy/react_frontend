@@ -9,6 +9,7 @@ import ExamPage from './pages/ExamPage';
 import Mypage from './pages/MyPage';
 import ExamResultPage from './pages/ExamResultPage';
 import ReportWritePage from './pages/ReportWritePage';
+import VideoTimelinePage from './pages/VideoTimelinePage';
 
 function App() {
   return (
@@ -22,6 +23,7 @@ function App() {
         <Route path="/mypage" element={<Mypage />} />
         <Route path="/result-page" element={<ExamResultPage />} />
         <Route path="/report" element={<ReportWritePage />} />
+        <Route path="/video" element={<VideoTimelinePage />} />
       </Routes>
     </Router>
   );
