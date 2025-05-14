@@ -1,18 +1,20 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import './DashboardPage.css';
 import logo from '../assets/logo.png';
 import profile from '../assets/profile.jpg';
 import exampleDrawing from '../assets/example_drawing.png';
 import baby_profile from '../assets/baby_profile.jpg';
-require('dotenv').config();
-
+import { getEventsAndStrokes, playTimelapse } from '../services/reconFunctions';
+import * as fabric from 'fabric';
+import './ExamResultPage.css';
 
 function ExamResultPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const exam = location.state?.exam;
   const user = location.state?.user;
+  const canvasRef = useRef(null);
 
   const [selectedIcon, setSelectedIcon] = useState(0);
   const [viewMode, setViewMode] = useState('event');
@@ -20,6 +22,7 @@ function ExamResultPage() {
 
   const iconButtons = ['🏠', '🌳', '👦', '👧'];
   const drawingTypes = ['house', 'tree', 'man', 'woman'];
+  const IP_ADDR = process.env.REACT_APP_IP_ADDR;
 
   // 선택된 버튼에 따라 서버에서 QnA 불러오기
   useEffect(() => {
@@ -30,7 +33,7 @@ function ExamResultPage() {
     const fetchQnA = async () => {
       try {
         const response = await fetch(
-          `http://localhost:3000/test/getQnAByTestId?testId=${exam.id}&drawingType=${drawingType}`
+          `${IP_ADDR}/test/getQnAByTestId?testId=${exam.id}&drawingType=${drawingType}`
         );
         if (!response.ok) throw new Error('서버 응답 실패');
 
@@ -48,7 +51,32 @@ function ExamResultPage() {
       }
     };
 
+    const reconData = async () => {
+      try{
+        const {events, allStrokes, finalStrokes} = await getEventsAndStrokes(exam.id, drawingType);
+        console.log({"events" : events, "allStrokes" : allStrokes, "finalStrokes" : finalStrokes});
+      
+        
+        if(canvasRef.current) canvasRef.current.dispose();
+
+        const canvas = new fabric.Canvas('c', {
+          isDrawingMode: false,
+          selection: false,
+        });
+        canvasRef.current = canvas;
+
+        if (allStrokes?.strokes?.length) {
+          await playTimelapse(canvas, allStrokes.strokes);
+        }
+      
+      }catch(error){
+        console.error('❌ strokes, events 불러오기 실패:', error);
+      }
+    }
+     
     fetchQnA();
+    reconData();
+
   }, [selectedIcon, exam?.id]);
 
 
@@ -70,6 +98,7 @@ function ExamResultPage() {
           </nav>
         </div>
 
+
         <div className="main-area exam-result-area">
           <div className="exam-side-info">
             <img src={baby_profile} alt="baby_profile" className="side-profile" />
@@ -90,42 +119,46 @@ function ExamResultPage() {
             </div>
             <button className="video-button black" onClick={() => navigate('/video', { state: { user, exam } })}>🎥 영상 확인하기</button>
           </div>
-
-          <div className="drawing-container">
-            <img src={exampleDrawing} alt="검사 그림" className="drawing-image" />
-          </div>
-
-          <div className="behavior-list">
-            <div className="view-toggle-buttons">
-              <button
-                className={`toggle-button ${viewMode === 'event' ? 'active' : ''}`}
-                onClick={() => setViewMode('event')}
-              >
-                ✔ 이벤트 보기
-              </button>
-              <button
-                className={`toggle-button ${viewMode === 'question' ? 'active' : ''}`}
-                onClick={() => setViewMode('question')}
-              >
-                ✔ 질문 보기
-              </button>
+             
+          <div className="drawing-section">
+            <div className="drawing-container">
+              <canvas id="c" width={500} height={500} style={{ border: '1px solid #ccc' }}></canvas>
             </div>
 
-            {viewMode === 'event' ? (
-              <>
-                {/* 기존 이벤트 목록 유지 */}
-                <button className="behavior-item"><span className="behavior-icon">☰</span><span className="behavior-label">선 굵기 변화</span></button>
-                <button className="behavior-item"><span className="behavior-icon">📌</span><span className="behavior-label">지우고 다시 그림</span></button>
-              </>
-            ) : (
-              questions.map((qa, index) => (
-                <div key={index} className="qa-box">
-                  <div className="qa-question">Q {qa.q}</div>
-                  <div className="qa-answer">{qa.a}</div>
-                </div>
-              ))
-            )}
+            <div className="behavior-list">
+              <div className="view-toggle-buttons">
+                <button
+                  className={`toggle-button ${viewMode === 'event' ? 'active' : ''}`}
+                  onClick={() => setViewMode('event')}
+                >
+                  ✔ 이벤트 보기
+                </button>
+                <button
+                  className={`toggle-button ${viewMode === 'question' ? 'active' : ''}`}
+                  onClick={() => setViewMode('question')}
+                >
+                  ✔ 질문 보기
+                </button>
+              </div>
+
+              {viewMode === 'event' ? (
+                <>
+                  {/* 기존 이벤트 목록 유지 */}
+                  <button className="behavior-item"><span className="behavior-icon">☰</span><span className="behavior-label">선 굵기 변화</span></button>
+                  <button className="behavior-item"><span className="behavior-icon">📌</span><span className="behavior-label">지우고 다시 그림</span></button>
+                </>
+              ) : (
+                questions.map((qa, index) => (
+                  <div key={index} className="qa-box">
+                    <div className="qa-question">Q {qa.q}</div>
+                    <div className="qa-answer">{qa.a}</div>
+                  </div>
+                ))
+              )}
+            </div>
+
           </div>
+          
         </div>
       </div>
     </div>

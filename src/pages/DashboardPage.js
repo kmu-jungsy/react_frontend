@@ -14,13 +14,14 @@ function DashboardPage() {
   const user = location.state?.userData;
   const userName = user?.name || '김이름';
   const userId = user?.id;
+  const IP_ADDR = process.env.REACT_APP_IP_ADDR;
 
   useEffect(() => {
     const fetchPatients = async () => {
       if (!userId) return;
 
       try {
-        const response = await fetch(`http://172.21.214.129:3000/child/getAllChildrenByUser?userid=${userId}`);
+        const response = await fetch(`${IP_ADDR}/child/getAllChildrenByUser?userid=${userId}`);
         if (!response.ok) {
           throw new Error('서버 응답 실패');
         }
@@ -58,7 +59,7 @@ function DashboardPage() {
     if (!patient) return;
 
      try {
-      const response = await fetch('http://172.21.214.129:3000/child/deleteChild', {
+      const response = await fetch(`${IP_ADDR}/child/deleteChild`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
@@ -106,7 +107,7 @@ function DashboardPage() {
 
   const handleCreateTest = async (childId) => {
     try {
-      const response = await fetch('http://172.21.214.129:3000/test/createTest', {
+      const response = await fetch(`${IP_ADDR}/test/createTest`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
