@@ -64,7 +64,6 @@ function ExamPage() {
           <nav className="nav-menu">
             <button className="nav-button" onClick={() => navigate('/dashboard', { state: { userData: user } })}>home</button>
             <button className="nav-button active">검사</button>
-            <button className="nav-button" onClick={() => navigate('/mypage')}>마이페이지</button>
           </nav>
         </div>
 
@@ -77,7 +76,6 @@ function ExamPage() {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
-            <button className="add-button2">환자추가</button>
           </div>
 
           <div className="exam-list">
@@ -90,7 +88,8 @@ function ExamPage() {
                   <th>생년월일</th>
                   <th>검사진행 상황</th>
                   <th>검사일</th>
-                  <th></th>
+                  <th>검사 결과</th>    
+                  <th>보고서 작성</th>
                 </tr>
               </thead>
               <tbody>
@@ -105,9 +104,26 @@ function ExamPage() {
                       </span>
                     </td>
                     <td>{exam.date}</td>
+
                     <td>
                       {exam.isCompleted && (
-                        <button className="nav-button" onClick={() => navigate('/result-page')}>검사 보기</button>
+                        <button
+                          className="nav-button2"
+                          onClick={() => navigate('/result-page', { state: { exam, user } })}
+                        >
+                          검사 보기
+                        </button>
+                      )}
+                    </td>
+
+                    <td>
+                      {exam.isCompleted && (
+                        <button
+                          className="nav-button2"
+                          onClick={() => navigate('/report', { state: { exam, user } })}
+                        >
+                          보고서 작성하기
+                        </button>
                       )}
                     </td>
                   </tr>
