@@ -27,7 +27,7 @@ function ExamPage() {
         const processed = data.map(test => {
           const ssnFront = test.ssn?.split('-')[0] || '';
           return {
-            id: test.childid,
+            id: test.id,
             name: test.childname,
             birth: ssnFront,
             status: test.isCompleted ? '완료' : '진행예정',
@@ -107,7 +107,7 @@ function ExamPage() {
                     <td>{exam.date}</td>
                     <td>
                       {exam.isCompleted && (
-                        <button className="nav-button" onClick={() => navigate('/result-page')}>검사 보기</button>
+                        <button className="nav-button" onClick={() => navigate('/result-page', {state : { testId : exam.id}})}>검사 보기</button>
                       )}
                     </td>
                   </tr>

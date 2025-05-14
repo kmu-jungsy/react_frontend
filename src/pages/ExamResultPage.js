@@ -1,16 +1,31 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import './DashboardPage.css';
 import logo from '../assets/logo.png';
 import profile from '../assets/profile.jpg';
 import exampleDrawing from '../assets/example_drawing.png';
 import baby_profile from '../assets/baby_profile.jpg';
+require('dotenv').config();
+
 
 function ExamResultPage() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const testId = location.state?.testId;
+
+  // const response = await fetch();
+
+  useEffect(() => {
+    if(testId){
+      localStorage.setItem('testId', testId);
+    }
+  }, [testId]);
+
+
+
   const [selectedIcon, setSelectedIcon] = useState(0);
   const [viewMode, setViewMode] = useState('event'); // 'event' or 'question'
-
+  
   const behaviorList = [
     { icon: '☰', label: '선 굵기 변화' },
     { icon: '📌', label: '지우고 다시 그림' },
