@@ -51,7 +51,8 @@ const AddPatientPage = () => {
       address: formData.address,
       phone_no: formData.phone,
       userid: userid,
-      personal_history_family: formData.background
+      personal_history_family: formData.background,
+      counseling_reason: formData.reason
     };
 
     try {

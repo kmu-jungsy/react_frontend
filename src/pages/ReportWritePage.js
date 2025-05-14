@@ -1,5 +1,6 @@
 // ReportWritePage.js
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import './DashboardPage.css';
 import drawing from '../assets/example_drawing.png';
 import baby_profile from '../assets/baby_profile.jpg';
@@ -16,6 +17,11 @@ function ReportWritePage() {
   const nameRef = useRef();
   const genderRef = useRef();
   const testDateRef = useRef();
+  const examinerRef = useRef();
+  const reasonRef = useRef();
+  const backgroundRef = useRef();
+  const ssnRef = useRef();
+  const ageRef = useRef();
   const questionRefs = {
     house: useRef(),
     tree: useRef(),
@@ -33,6 +39,29 @@ function ReportWritePage() {
         if (nameRef.current) nameRef.current.value = data.name;
         if (genderRef.current) genderRef.current.value = data.gender;
         if (testDateRef.current) testDateRef.current.value = data.testDate;
+        if (examinerRef.current) examinerRef.current.value = data.examiner;
+        if (reasonRef.current) reasonRef.current.value = data.reason;
+        if (backgroundRef.current) backgroundRef.current.value = data.background;
+        if (ssnRef.current && data.ssn) {
+          const ssn6 = data.ssn.slice(0, 6);  // 예: 990309
+          ssnRef.current.value = ssn6;
+
+          const yearPrefix = parseInt(ssn6.slice(0, 2), 10) < 25 ? 2000 : 1900; 
+          const birthYear = yearPrefix + parseInt(ssn6.slice(0, 2), 10);
+          const birthMonth = parseInt(ssn6.slice(2, 4), 10);
+          const birthDay = parseInt(ssn6.slice(4, 6), 10);
+
+          const birthDate = new Date(birthYear, birthMonth - 1, birthDay);
+          const today = new Date();
+
+          let age = today.getFullYear() - birthDate.getFullYear();
+          const m = today.getMonth() - birthDate.getMonth();
+          if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+            age--;
+          }
+
+          if (ageRef.current) ageRef.current.value = age;
+        }
 
         data.qna.forEach(item => {
           const ref = questionRefs[item.drawingType];
@@ -97,27 +126,27 @@ function ReportWritePage() {
                   </tr>
                   <tr>
                     <td>나이</td>
-                    <td><input type="text" className="full-width-input" /></td>
+                    <td><input type="text" ref={ageRef} className="full-width-input" /></td>
                     <td>생년월일</td>
-                    <td><input type="text" className="full-width-input" /></td>
+                    <td><input type="text" ref={ssnRef} className="full-width-input" /></td>
                   </tr>
                   <tr>
                     <td>검사일</td>
                     <td><input ref={testDateRef} type="text" className="full-width-input" /></td>
                     <td>검사자</td>
-                    <td><input type="text" className="full-width-input" /></td>
+                    <td><input ref={examinerRef} type="text" className="full-width-input" /></td>
                   </tr>
                   <tr>
                     <td className="section-header" colSpan="4">의뢰 사유</td>
                   </tr>
                   <tr>
-                    <td colSpan="4"><textarea className="full-width-input" rows="3"></textarea></td>
+                    <td colSpan="4"><textarea ref={reasonRef} className="full-width-input" rows="3"></textarea></td>
                   </tr>
                   <tr>
                     <td className="section-header" colSpan="4">가족배경과 개인력</td>
                   </tr>
                   <tr>
-                    <td colSpan="4"><textarea className="full-width-input" rows="5"></textarea></td>
+                    <td colSpan="4"><textarea ref={backgroundRef} className="full-width-input" rows="5"></textarea></td>
                   </tr>
                   <tr>
                     <td className="section-header" colSpan="4">FAMILY TREE</td>
