@@ -6,7 +6,6 @@ import SignupPage from './pages/SignupPage';
 import DashboardPage from './pages/DashboardPage';
 import AddPatientPage from './pages/AddPatientPage';
 import ExamPage from './pages/ExamPage';
-import Mypage from './pages/MyPage';
 import ExamResultPage from './pages/ExamResultPage';
 import ReportWritePage from './pages/ReportWritePage';
 import VideoTimelinePage from './pages/VideoTimelinePage';
@@ -20,7 +19,6 @@ function App() {
         <Route path="/dashboard" element={<DashboardPage />} />
         <Route path="/add-patient" element={<AddPatientPage />} />
         <Route path="/exam" element={<ExamPage />} />
-        <Route path="/mypage" element={<Mypage />} />
         <Route path="/result-page" element={<ExamResultPage />} />
         <Route path="/report" element={<ReportWritePage />} />
         <Route path="/video" element={<VideoTimelinePage />} />
