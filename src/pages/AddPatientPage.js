@@ -42,6 +42,7 @@ const AddPatientPage = () => {
     setFormData({ ...formData, [name]: value });
   };
 
+  const IP_ADDR = process.env.REACT_APP_IP_ADDR;
   const handleSubmit = async () => {
     const ssn = `${formData.idFront}-${formData.idBack}`;
     const requestData = {
@@ -56,7 +57,7 @@ const AddPatientPage = () => {
     };
 
     try {
-      const response = await fetch('http://172.21.214.129:3000/child/createChild', {
+      const response = await fetch(`${IP_ADDR}/child/createChild`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

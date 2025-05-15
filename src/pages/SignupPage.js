@@ -22,11 +22,12 @@ function SignupPage() {
     }));
   };
 
+  const IP_ADDR = process.env.REACT_APP_IP_ADDR;
   const handleNext = async (e) => {
     e.preventDefault();
 
     try {
-      const response = await fetch('http://172.21.214.129:3000/user/createUser', {
+      const response = await fetch(`${IP_ADDR}/user/createUser`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

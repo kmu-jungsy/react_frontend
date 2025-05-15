@@ -13,13 +13,14 @@ function ExamPage() {
   const [searchTerm, setSearchTerm] = useState('');
 
   const [examList, setExamList] = useState([]);
+  const IP_ADDR = process.env.REACT_APP_IP_ADDR;
 
   useEffect(() => {
     const fetchExams = async () => {
       if (!userId) return;
 
       try {
-        const response = await fetch(`http://172.21.214.129:3000/test/getAllTestsByUser?userid=${userId}`);
+        const response = await fetch(`${IP_ADDR}/test/getAllTestsByUser?userid=${userId}`);
         if (!response.ok) throw new Error('서버 요청 실패');
 
         const data = await response.json();
@@ -27,7 +28,7 @@ function ExamPage() {
         const processed = data.map(test => {
           const ssnFront = test.ssn?.split('-')[0] || '';
           return {
-            id: test.childid,
+            id: test.id,
             name: test.childname,
             birth: ssnFront,
             status: test.isCompleted ? '완료' : '진행예정',

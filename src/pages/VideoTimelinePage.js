@@ -14,33 +14,33 @@ function VideoTimelinePage() {
   const [videoUrl, setVideoUrl] = useState('');
   const [analysisData, setAnalysisData] = useState(null);
   const [timelineEvents, setTimelineEvents] = useState([]);
-  const [childInfo, setChildInfo] = useState({ name: '±èÀÌ¸§', age: '¸¸ 7¼¼' });
+  const [childInfo, setChildInfo] = useState({ name: 'ï¿½ï¿½ï¿½Ì¸ï¿½', age: 'ï¿½ï¿½ 7ï¿½ï¿½' });
   const exam = location.state?.exam;
   const testId = exam?.id
   const user = location.state?.user;
   const [noteTimestamp, setNoteTimestamp] = useState('');
   const [noteContent, setNoteContent] = useState('');
   const [notes, setNotes] = useState([]);
-  const [editingNoteId, setEditingNoteId] = useState(null); // ¾î¶² ¸Þ¸ð ¼öÁ¤ ÁßÀÎÁö
-  const [editedContent, setEditedContent] = useState('');   // ¼öÁ¤ ÁßÀÎ ¸Þ¸ð ³»¿ë
+  const [editingNoteId, setEditingNoteId] = useState(null); // ï¿½î¶² ï¿½Þ¸ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+  const [editedContent, setEditedContent] = useState('');   // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Þ¸ï¿½ ï¿½ï¿½ï¿½ï¿½
 
-  // ¾ÆÀÌÄÜ ¹öÆ° ¹è¿­ - Áý, ³ª¹«, ³²ÀÚ, ¿©ÀÚ
+  // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Æ° ï¿½è¿­ - ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½
   const iconButtons = ['?', '?', '?', '?'];
   const drawingTypes = ['house', 'tree', 'man', 'woman'];
 
   
-
+  const IP_ADDR = process.env.REACT_APP_IP_ADDR;
   const fetchNotes = async (testId, drawingType) => {
     try {
-        const response = await fetch(`http://localhost:3000/note?testId=${testId}&type=${drawingType}`);
+        const response = await fetch(`${IP_ADDR}/note?testId=${testId}&type=${drawingType}`);
         if (response.ok) {
         const data = await response.json();
         setNotes(data.notes || []);
         } else {
-        console.error("? ³ëÆ® ºÒ·¯¿À±â ½ÇÆÐ");
+        console.error("? ï¿½ï¿½Æ® ï¿½Ò·ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½");
         }
     } catch (error) {
-        console.error("? ³ëÆ® °¡Á®¿À±â ¿À·ù:", error);
+        console.error("? ï¿½ï¿½Æ® ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½:", error);
     }
     };
 
@@ -54,7 +54,7 @@ function VideoTimelinePage() {
     };
 
     try {
-        const response = await fetch('http://172.21.214.129:3000/note/add', {
+        const response = await fetch(`${IP_ADDR}/note/add`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
@@ -64,23 +64,23 @@ function VideoTimelinePage() {
 
         if (!response.ok) {
             const errorText = await response.text();
-            console.error('¼­¹ö ÀÀ´ä ³»¿ë:', errorText);
-            alert('? ¸Þ¸ð Ãß°¡¿¡ ½ÇÆÐÇß½À´Ï´Ù.');
+            console.error('ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½:', errorText);
+            alert('? ï¿½Þ¸ï¿½ ï¿½ß°ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ß½ï¿½ï¿½Ï´ï¿½.');
         }
 
         if (response.ok) {
-        alert('? ¸Þ¸ð°¡ ¼º°øÀûÀ¸·Î Ãß°¡µÇ¾ú½À´Ï´Ù.');
+        alert('? ï¿½Þ¸ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ß°ï¿½ï¿½Ç¾ï¿½ï¿½ï¿½ï¿½Ï´ï¿½.');
         setNoteTimestamp('');
         setNoteContent('');
         await fetchNotes(exam.id, typeMap[selectedIcon]);
         } else {
             const errorText = await response.text();
-            console.error('¼­¹ö ÀÀ´ä ³»¿ë:', errorText);
-            alert('? ¸Þ¸ð Ãß°¡¿¡ ½ÇÆÐÇß½À´Ï´Ù.');
+            console.error('ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½:', errorText);
+            alert('? ï¿½Þ¸ï¿½ ï¿½ß°ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ß½ï¿½ï¿½Ï´ï¿½.');
         }
     } catch (error) {
-        console.error('? ¼­¹ö ¿À·ù:', error);
-        alert('? ¼­¹ö ¿¬°á¿¡ ½ÇÆÐÇß½À´Ï´Ù.');
+        console.error('? ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½:', error);
+        alert('? ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½á¿¡ ï¿½ï¿½ï¿½ï¿½ï¿½ß½ï¿½ï¿½Ï´ï¿½.');
     }
     };
 
@@ -94,7 +94,7 @@ function VideoTimelinePage() {
         };
 
         try {
-            const response = await fetch('http://localhost:3000/note/updateById', {
+            const response = await fetch(`${IP_ADDR}/note/updateById`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json'
@@ -103,28 +103,28 @@ function VideoTimelinePage() {
             });
 
             if (response.ok) {
-            alert('? ¸Þ¸ð°¡ ¼öÁ¤µÇ¾ú½À´Ï´Ù.');
+            alert('? ï¿½Þ¸ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ç¾ï¿½ï¿½ï¿½ï¿½Ï´ï¿½.');
             setEditingNoteId(null);
             setEditedContent('');
-            await fetchNotes(exam.id, typeMap[selectedIcon]);  // ¼öÁ¤ ÈÄ notes °»½Å
+            await fetchNotes(exam.id, typeMap[selectedIcon]);  // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ notes ï¿½ï¿½ï¿½ï¿½
             } else {
-            alert('? ¼öÁ¤ ½ÇÆÐ');
+            alert('? ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½');
             }
         } catch (error) {
-            console.error('? ¼­¹ö ¿À·ù:', error);
-            alert('? ¼­¹ö ¿¬°á ½ÇÆÐ');
+            console.error('? ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½:', error);
+            alert('? ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½');
         }
         };
 
-  // ±×¸² À¯Çü º¯°æ ÇÚµé·¯
+  // ï¿½×¸ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Úµé·¯
   const handleIconChange = (index) => {
     setSelectedIcon(index);
     const type = drawingTypes[index];
 
-    const url = `http://localhost:3000/video/view/${exam.id}/${type}/${exam.id}_${type}.mp4`;
+    const url = `${IP_ADDR}/video/view/${exam.id}/${type}/${exam.id}_${type}.mp4`;
     setVideoUrl(url);
 
-    fetchNotes(exam.id, type);  // ? ¸Þ¸ð ºÒ·¯¿À±â
+    fetchNotes(exam.id, type);  // ? ï¿½Þ¸ï¿½ ï¿½Ò·ï¿½ï¿½ï¿½ï¿½ï¿½
     };
 
   useEffect(() => {
@@ -133,7 +133,7 @@ function VideoTimelinePage() {
         setLoading(true);
 
         const type = drawingTypes[selectedIcon];
-        const url = `http://localhost:3000/video/view/${exam.id}/${type}/${exam.id}_${type}.mp4`;
+        const url = `${IP_ADDR}/video/view/${exam.id}/${type}/${exam.id}_${type}.mp4`;
         setVideoUrl(url);
 
         await fetchNotes(exam.id, type);
@@ -141,7 +141,7 @@ function VideoTimelinePage() {
         setLoading(false);
 
         } catch (error) {
-        console.error('? µ¥ÀÌÅÍ ·Îµù ¿À·ù:', error);
+        console.error('? ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Îµï¿½ ï¿½ï¿½ï¿½ï¿½:', error);
         setLoading(false);
         }
     };
@@ -151,25 +151,25 @@ function VideoTimelinePage() {
     }
     }, [exam?.id]);
 
-  // Å¸ÀÓ¶óÀÎ ÀÌº¥Æ® Å¬¸¯ ÇÚµé·¯
+  // Å¸ï¿½Ó¶ï¿½ï¿½ï¿½ ï¿½Ìºï¿½Æ® Å¬ï¿½ï¿½ ï¿½Úµé·¯
   const handleTimelineClick = (timestamp) => {
     if (videoRef.current) {
-      // ½Ã°£ Çü½Ä (mm:ss)À» ÃÊ·Î º¯È¯
+      // ï¿½Ã°ï¿½ ï¿½ï¿½ï¿½ï¿½ (mm:ss)ï¿½ï¿½ ï¿½Ê·ï¿½ ï¿½ï¿½È¯
       const seconds = convertToSeconds(timestamp);
       
-      // ºñµð¿À ½Ã°£ ¼³Á¤
+      // ï¿½ï¿½ï¿½ï¿½ ï¿½Ã°ï¿½ ï¿½ï¿½ï¿½ï¿½
       videoRef.current.currentTime = seconds;
       videoRef.current.play();
     }
   };
 
-  // ½Ã°£ ¹®ÀÚ¿­(MM:SS)À» ÃÊ·Î º¯È¯
+  // ï¿½Ã°ï¿½ ï¿½ï¿½ï¿½Ú¿ï¿½(MM:SS)ï¿½ï¿½ ï¿½Ê·ï¿½ ï¿½ï¿½È¯
   const convertToSeconds = (timestamp) => {
     const [minutes, seconds] = timestamp.split(':').map(Number);
     return minutes * 60 + seconds;
   };
 
-  // ÁÖ¹Î¹øÈ£ ¾ÕÀÚ¸®·Î ³ªÀÌ °è»ê
+  // ï¿½Ö¹Î¹ï¿½È£ ï¿½ï¿½ï¿½Ú¸ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½
   const calculateAge = (ssn) => {
     if (!ssn) return '';
     
@@ -185,17 +185,17 @@ function VideoTimelinePage() {
     const m = today.getMonth() - birthDate.getMonth();
     if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) age--;
     
-    return `¸¸ ${age}¼¼`;
+    return `ï¿½ï¿½ ${age}ï¿½ï¿½`;
   };
 
-  // ÀÌº¥Æ® Å¸ÀÔº° ¾ÆÀÌÄÜ ¹ÝÈ¯ ÇÔ¼ö
+  // ï¿½Ìºï¿½Æ® Å¸ï¿½Ôºï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½È¯ ï¿½Ô¼ï¿½
   const getEventIcon = (type) => {
     switch (type) {
-      case 'object': return '?'; // °´Ã¼ »ý¼º
-      case 'repeat': return '?'; // ¹Ýº¹
-      case 'hesitation': return '??'; // ¸Á¼³ÀÓ
-      case 'erase': return '?'; // Áö¿ì±â
-      case 'emphasis': return '?'; // °­Á¶
+      case 'object': return '?'; // ï¿½ï¿½Ã¼ ï¿½ï¿½ï¿½ï¿½
+      case 'repeat': return '?'; // ï¿½Ýºï¿½
+      case 'hesitation': return '??'; // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+      case 'erase': return '?'; // ï¿½ï¿½ï¿½ï¿½ï¿½
+      case 'emphasis': return '?'; // ï¿½ï¿½ï¿½ï¿½
       default: return '?';
     }
   };
@@ -210,7 +210,7 @@ function VideoTimelinePage() {
 
         <div className="main-area">
           <div className="video-timeline-container">
-            {/* ¿ÞÂÊ ÆÐ³Î: È¯ÀÚ Á¤º¸ */}
+            {/* ï¿½ï¿½ï¿½ï¿½ ï¿½Ð³ï¿½: È¯ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ */}
             <div className="patient-info-panel">
               <img src={baby_profile} alt="baby_profile" className="side-profile" />
               <div className="side-name-age">
@@ -233,34 +233,34 @@ function VideoTimelinePage() {
                 className="back-button"
                 onClick={() => navigate('/result-page', { state: { exam, user } })}
               >
-                ¡ç °á°ú ÆäÀÌÁö·Î
+                ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
               </button>
 
               <div className="note-area">
                 <input
                     type="text"
                     className="note-input"
-                    placeholder="Å¸ÀÓ½ºÅÆÇÁ (¿¹: 01:23)"
+                    placeholder="Å¸ï¿½Ó½ï¿½ï¿½ï¿½ï¿½ï¿½ (ï¿½ï¿½: 01:23)"
                     value={noteTimestamp}
                     onChange={(e) => setNoteTimestamp(e.target.value)}
                 />
                 <textarea
                     className="note-textarea"
                     rows="3"
-                    placeholder="¸Þ¸ð ³»¿ëÀ» ÀÔ·ÂÇÏ¼¼¿ä"
+                    placeholder="ï¿½Þ¸ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ô·ï¿½ï¿½Ï¼ï¿½ï¿½ï¿½"
                     value={noteContent}
                     onChange={(e) => setNoteContent(e.target.value)}
                 />
                 <button className="note-button" onClick={handleAddNote}>
-                    ¸Þ¸ð Ãß°¡
+                    ï¿½Þ¸ï¿½ ï¿½ß°ï¿½
                 </button>
                 </div>
             </div>
             
-            {/* Áß¾Ó ÆÐ³Î: ºñµð¿À ÇÃ·¹ÀÌ¾î */}
+            {/* ï¿½ß¾ï¿½ ï¿½Ð³ï¿½: ï¿½ï¿½ï¿½ï¿½ ï¿½Ã·ï¿½ï¿½Ì¾ï¿½ */}
             <div className="video-container">
               {loading ? (
-                <div className="loading-indicator">¿µ»ó ·Îµù Áß...</div>
+                <div className="loading-indicator">ï¿½ï¿½ï¿½ï¿½ ï¿½Îµï¿½ ï¿½ï¿½...</div>
               ) : (
                 <video 
                   ref={videoRef} 
@@ -268,26 +268,26 @@ function VideoTimelinePage() {
                   className="video-player"
                   src={videoUrl}
                 >
-                  ºê¶ó¿ìÀú°¡ ºñµð¿À¸¦ Áö¿øÇÏÁö ¾Ê½À´Ï´Ù.
+                  ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ê½ï¿½ï¿½Ï´ï¿½.
                 </video>
               )}
               
               {analysisData && (
                 <div className="video-summary">
-                  <h3>±×¸² °úÁ¤ ¿ä¾à</h3>
+                  <h3>ï¿½×¸ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½</h3>
                   <p>{analysisData.objectiveSummary}</p>
                 </div>
               )}
             </div>
             
-            {/* ¿À¸¥ÂÊ ÆÐ³Î: Å¸ÀÓ¶óÀÎ */}
+            {/* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ð³ï¿½: Å¸ï¿½Ó¶ï¿½ï¿½ï¿½ */}
             <div className="timeline-container">
-              <h3 className="timeline-title">Å¸ÀÓ¶óÀÎ</h3>
+              <h3 className="timeline-title">Å¸ï¿½Ó¶ï¿½ï¿½ï¿½</h3>
               
               {loading ? (
-                <div className="loading-indicator">Å¸ÀÓ¶óÀÎ ·Îµù Áß...</div>
+                <div className="loading-indicator">Å¸ï¿½Ó¶ï¿½ï¿½ï¿½ ï¿½Îµï¿½ ï¿½ï¿½...</div>
                 ) : (timelineEvents.length === 0 && notes.length === 0) ? (
-                <div className="empty-timeline">Å¸ÀÓ¶óÀÎ ÀÌº¥Æ®°¡ ¾ø½À´Ï´Ù.</div>
+                <div className="empty-timeline">Å¸ï¿½Ó¶ï¿½ï¿½ï¿½ ï¿½Ìºï¿½Æ®ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï´ï¿½.</div>
                 ) : (
                 <div className="timeline-events">
                     {notes.map((note, index) => (
@@ -322,7 +322,7 @@ function VideoTimelinePage() {
                                 }
                             }}
                             >
-                            {editingNoteId === note._id ? 'ÀúÀåÇÏ±â' : '¼öÁ¤ÇÏ±â'}
+                            {editingNoteId === note._id ? 'ï¿½ï¿½ï¿½ï¿½ï¿½Ï±ï¿½' : 'ï¿½ï¿½ï¿½ï¿½ï¿½Ï±ï¿½'}
                             </button>
                         </div>
                         ))}

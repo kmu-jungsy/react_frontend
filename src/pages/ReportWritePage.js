@@ -29,11 +29,13 @@ function ReportWritePage() {
     woman: useRef()
   };
 
+  const IP_ADDR = process.env.REACT_APP_IP_ADDR;
+  
   useEffect(() => {
     const fetchData = async () => {
       if (!exam?.id) return;
       try {
-        const res = await fetch(`http://localhost:3000/htpReport/init/${exam.id}`);
+        const res = await fetch(`${IP_ADDR}/htpReport/init/${exam.id}`);
         const data = await res.json();
 
         if (nameRef.current) nameRef.current.value = data.name;
