@@ -5,7 +5,7 @@ import logo from '../assets/logo.png';
 import profile from '../assets/profile.jpg';
 import exampleDrawing from '../assets/example_drawing.png';
 import baby_profile from '../assets/baby_profile.jpg';
-import { getEventsAndStrokes, playTimelapse } from '../services/reconFunctions';
+import { computeStrokeScale, getEventsAndStrokes, playTimelapse} from '../services/reconFunctions';
 import * as fabric from 'fabric';
 import './ExamResultPage.css';
 
@@ -20,6 +20,9 @@ function ExamResultPage() {
   const [selectedIcon, setSelectedIcon] = useState(0);
   const [viewMode, setViewMode] = useState('event');
   const [questions, setQuestions] = useState([]);
+  const [eventStrokes, setEventStrokes] = useState([]);
+  const [allStrokes, setAllStrokes] = useState(null);
+  const [scaleMeta, setScaleMeta] = useState(null);
 
   const iconButtons = ['🏠', '🌳', '👦', '👧'];
   const drawingTypes = ['house', 'tree', 'man', 'woman'];
@@ -64,7 +67,9 @@ function ExamResultPage() {
       try {
         const { events, allStrokes, finalStrokes } = await getEventsAndStrokes(exam.id, drawingType);
         console.log({ events, allStrokes, finalStrokes });
-
+        setEventStrokes(events?.eventStrokes);
+        setAllStrokes(allStrokes);
+        
         // 👉 eventButtons 만들기
         const extractedEvents = new Set();
         for (const ev of events?.eventStrokes || []) {
@@ -72,17 +77,21 @@ function ExamResultPage() {
             extractedEvents.add(e);
           }
         }
+        console.log("이벤트 버튼 목록", extractedEvents);
         setEventButtons(Array.from(extractedEvents));
-
+        
         if (canvasRef.current) canvasRef.current.dispose();
         const canvas = new fabric.Canvas('c', {
           isDrawingMode: false,
           selection: false,
         });
         canvasRef.current = canvas;
-
+        
+        const {scale, offsetX, offsetY} = computeStrokeScale(allStrokes.strokes, canvas);
+        setScaleMeta({scale, offsetX, offsetY});
+        
         if (allStrokes?.strokes?.length) {
-          await playTimelapse(canvas, allStrokes.strokes);
+          await playTimelapse(canvas, allStrokes.strokes, scale, offsetX, offsetY);
         }
 
       } catch (error) {
@@ -90,12 +99,54 @@ function ExamResultPage() {
       }
     };
 
-     
     fetchQnA();
     reconData();
-
+    
   }, [selectedIcon, exam?.id]);
+  
+  const replayEventStrokes = async(eventStrokes, allStrokes, eventType) => {
+    if(!canvasRef.current || !allStrokes?.strokes?.length) return;
+    const canvas = canvasRef.current;
+    const {scale, offsetX, offsetY} = scaleMeta;
 
+    console.log('eventStrokes : ', eventStrokes);
+    console.log('allStrokes : ', allStrokes);
+
+    //event에 해당하는 strokeOrder 추출
+    const matchedOrders = new Set();
+    for(const ev of eventStrokes){
+      if(ev.event.includes(eventType)){
+        ev.strokeOrder.forEach(order => matchedOrders.add(order));
+      }
+    }
+    console.log(`${eventType}의 matchedOrders : ${matchedOrders}`);
+
+    //추출된 strokeOrder에 해당되는 좌표 추출
+    const matchedStrokes = allStrokes.strokes.filter(
+      (stroke) => matchedOrders.has(stroke.strokeOrder)
+    );
+    
+    console.log(`${eventType}으로 재생될 matchedStrokes : ${matchedStrokes}`);
+    
+    for(const stroke of matchedStrokes){
+      const toRemove = canvas.getObjects().filter(obj => 
+        obj.strokeOrder === stroke.strokeOrder
+      );
+      console.log(`지울 strokeOrder: ${stroke.strokeOrder}`);
+      console.log('toRemove:', toRemove);
+      toRemove.forEach(obj => canvas.remove(obj));
+
+      await playTimelapse(canvas, [stroke], scale, offsetX, offsetY);
+
+      await new Promise(resolve => setTimeout(resolve, 500));
+    }
+
+    // if(matchedStrokes.length > 0){
+    //   await playTimelapse(canvas, matchedStrokes);
+    // }else{
+    //   console.log(`${eventType} 관련 stroke 없음`);
+    // }
+  }
 
   return (
     <div className="dashboard">
@@ -161,7 +212,11 @@ function ExamResultPage() {
               {viewMode === 'event' ? (
                 <>
                   {eventButtons.map((eventType, index) => (
-                    <button key={index} className="behavior-item">
+                    <button 
+                      key={index} 
+                      className="behavior-item"
+                      onClick = {() => replayEventStrokes(eventStrokes, allStrokes, eventType)}  
+                    >
                       <span className="behavior-icon">🎯</span>
                       <span className="behavior-label">{eventLabelMap[eventType] || eventType}</span>
                     </button>
