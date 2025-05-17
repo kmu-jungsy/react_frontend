@@ -77,6 +77,8 @@ function ExamResultPage() {
             extractedEvents.add(e);
           }
         }
+        setEventButtons(Array.from(extractedEvents));
+
         console.log("이벤트 버튼 목록", extractedEvents);
         setEventButtons(Array.from(extractedEvents));
         
