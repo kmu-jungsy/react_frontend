@@ -10,8 +10,7 @@ export const getEventsAndStrokes = async (testId, type) =>{
 
     return response.data;
 }
-
-export const playTimelapse = async (canvas, strokes) => {
+export const computeStrokeScale = (strokes, canvas) => {
   // 1. stroke 좌표 범위 구하기
   let maxX = 0, maxY = 0, minX = Infinity, minY = Infinity;
   for (const stroke of strokes) {
@@ -22,20 +21,25 @@ export const playTimelapse = async (canvas, strokes) => {
       if (pt.y < minY) minY = pt.y;
     }
   }
-
+  
   const strokeWidth = maxX - minX;
   const strokeHeight = maxY - minY;
-
+  
   const canvasWidth = canvas.getWidth();
   const canvasHeight = canvas.getHeight();
-
+  
   const scaleX = canvasWidth / (strokeWidth + 20);
   const scaleY = canvasHeight / (strokeHeight + 20);
   const scale = Math.min(scaleX, scaleY);
-
+  
   // 🔥 중앙 정렬을 위한 오프셋 계산
   const offsetX = (canvasWidth - strokeWidth * scale) / 2 - minX * scale;
   const offsetY = (canvasHeight - strokeHeight * scale) / 2 - minY * scale;
+
+  return {scale, offsetX, offsetY};
+  
+}
+export const playTimelapse = async (canvas, strokes, scale, offsetX, offsetY) => {
 
   strokes.sort((a, b) => a.strokeOrder - b.strokeOrder);
 
@@ -63,6 +67,7 @@ export const playTimelapse = async (canvas, strokes) => {
         selectable: false,
       });
 
+      line.strokeOrder = stroke.strokeOrder;
       if (isErasing) {
         const pt = new fabric.Point(curr.x * scale + offsetX, curr.y * scale + offsetY);
         canvas.getObjects().forEach(obj => {
@@ -77,5 +82,4 @@ export const playTimelapse = async (canvas, strokes) => {
     await new Promise(resolve => setTimeout(resolve, 100));
   }
 };
-
 
