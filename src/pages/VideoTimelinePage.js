@@ -14,18 +14,16 @@ function VideoTimelinePage() {
   const [videoUrl, setVideoUrl] = useState('');
   const [analysisData, setAnalysisData] = useState(null);
   const [timelineEvents, setTimelineEvents] = useState([]);
-  const [childInfo, setChildInfo] = useState({ name: '���̸�', age: '�� 7��' });
   const exam = location.state?.exam;
   const testId = exam?.id
   const user = location.state?.user;
   const [noteTimestamp, setNoteTimestamp] = useState('');
   const [noteContent, setNoteContent] = useState('');
   const [notes, setNotes] = useState([]);
-  const [editingNoteId, setEditingNoteId] = useState(null); // � �޸� ���� ������
-  const [editedContent, setEditedContent] = useState('');   // ���� ���� �޸� ����
+  const [editingNoteId, setEditingNoteId] = useState(null); 
+  const [editedContent, setEditedContent] = useState('');  
 
-  // ������ ��ư �迭 - ��, ����, ����, ����
-  const iconButtons = ['?', '?', '?', '?'];
+  const iconButtons = ['🏠', '🌳', '👦', '👧'];
   const drawingTypes = ['house', 'tree', 'man', 'woman'];
 
   
@@ -37,10 +35,10 @@ function VideoTimelinePage() {
         const data = await response.json();
         setNotes(data.notes || []);
         } else {
-        console.error("? ��Ʈ �ҷ����� ����");
+        console.error("노트 불러오기 실패");
         }
     } catch (error) {
-        console.error("? ��Ʈ �������� ����:", error);
+        console.error("노트 가져오기 오류", error);
     }
     };
 
@@ -64,23 +62,23 @@ function VideoTimelinePage() {
 
         if (!response.ok) {
             const errorText = await response.text();
-            console.error('���� ���� ����:', errorText);
-            alert('? �޸� �߰��� �����߽��ϴ�.');
+            console.error('서버 응답 내용:', errorText);
+            alert('메모 추가에 실패했습니다.');
         }
 
         if (response.ok) {
-        alert('? �޸� ���������� �߰��Ǿ����ϴ�.');
+        alert('메모가 성공적으로 추가되었습니다.');
         setNoteTimestamp('');
         setNoteContent('');
         await fetchNotes(exam.id, typeMap[selectedIcon]);
         } else {
             const errorText = await response.text();
-            console.error('���� ���� ����:', errorText);
-            alert('? �޸� �߰��� �����߽��ϴ�.');
+            console.error('서버 응답 내용:', errorText);
+            alert('메모 추가에 실패했습니다.');
         }
     } catch (error) {
-        console.error('? ���� ����:', error);
-        alert('? ���� ���ῡ �����߽��ϴ�.');
+        console.error('서버 오류:', error);
+        alert('서버 연결에 실패했습니다.');
     }
     };
 
@@ -103,28 +101,28 @@ function VideoTimelinePage() {
             });
 
             if (response.ok) {
-            alert('? �޸� �����Ǿ����ϴ�.');
+            alert('메모가 수정되었습니다.');
             setEditingNoteId(null);
             setEditedContent('');
-            await fetchNotes(exam.id, typeMap[selectedIcon]);  // ���� �� notes ����
+            await fetchNotes(exam.id, typeMap[selectedIcon]);  
             } else {
-            alert('? ���� ����');
+            alert('수정 실패');
             }
         } catch (error) {
-            console.error('? ���� ����:', error);
-            alert('? ���� ���� ����');
+            console.error('서버 오류:', error);
+            alert('서버 연결 실패');
         }
         };
 
-  // �׸� ���� ���� �ڵ鷯
+
   const handleIconChange = (index) => {
     setSelectedIcon(index);
     const type = drawingTypes[index];
 
-    const url = `${IP_ADDR}/video/view/${exam.id}/${type}/${exam.id}_${type}.mp4`;
+    const url = `${IP_ADDR}/video/download?testId=${exam.id}&type=${type}`;
     setVideoUrl(url);
 
-    fetchNotes(exam.id, type);  // ? �޸� �ҷ�����
+    fetchNotes(exam.id, type);  
     };
 
   useEffect(() => {
@@ -133,7 +131,7 @@ function VideoTimelinePage() {
         setLoading(true);
 
         const type = drawingTypes[selectedIcon];
-        const url = `${IP_ADDR}/video/view/${exam.id}/${type}/${exam.id}_${type}.mp4`;
+        const url = `${IP_ADDR}/video/download?testId=${exam.id}&type=${type}`;
         setVideoUrl(url);
 
         await fetchNotes(exam.id, type);
@@ -141,7 +139,7 @@ function VideoTimelinePage() {
         setLoading(false);
 
         } catch (error) {
-        console.error('? ������ �ε� ����:', error);
+        console.error('데이터 로딩 오류:', error);
         setLoading(false);
         }
     };
@@ -151,25 +149,21 @@ function VideoTimelinePage() {
     }
     }, [exam?.id]);
 
-  // Ÿ�Ӷ��� �̺�Ʈ Ŭ�� �ڵ鷯
+
   const handleTimelineClick = (timestamp) => {
     if (videoRef.current) {
-      // �ð� ���� (mm:ss)�� �ʷ� ��ȯ
       const seconds = convertToSeconds(timestamp);
       
-      // ���� �ð� ����
       videoRef.current.currentTime = seconds;
       videoRef.current.play();
     }
   };
 
-  // �ð� ���ڿ�(MM:SS)�� �ʷ� ��ȯ
   const convertToSeconds = (timestamp) => {
     const [minutes, seconds] = timestamp.split(':').map(Number);
     return minutes * 60 + seconds;
   };
 
-  // �ֹι�ȣ ���ڸ��� ���� ���
   const calculateAge = (ssn) => {
     if (!ssn) return '';
     
@@ -185,20 +179,9 @@ function VideoTimelinePage() {
     const m = today.getMonth() - birthDate.getMonth();
     if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) age--;
     
-    return `�� ${age}��`;
+    return `만 ${age}세`;
   };
 
-  // �̺�Ʈ Ÿ�Ժ� ������ ��ȯ �Լ�
-  const getEventIcon = (type) => {
-    switch (type) {
-      case 'object': return '?'; // ��ü ����
-      case 'repeat': return '?'; // �ݺ�
-      case 'hesitation': return '??'; // ������
-      case 'erase': return '?'; // �����
-      case 'emphasis': return '?'; // ����
-      default: return '?';
-    }
-  };
 
   return (
     <div className="dashboard">
@@ -210,7 +193,6 @@ function VideoTimelinePage() {
 
         <div className="main-area">
           <div className="video-timeline-container">
-            {/* ���� �г�: ȯ�� ���� */}
             <div className="patient-info-panel">
               <img src={baby_profile} alt="baby_profile" className="side-profile" />
               <div className="side-name-age">
@@ -233,34 +215,33 @@ function VideoTimelinePage() {
                 className="back-button"
                 onClick={() => navigate('/result-page', { state: { exam, user } })}
               >
-                �� ��� ��������
+                ← 결과 페이지로
               </button>
 
               <div className="note-area">
                 <input
                     type="text"
                     className="note-input"
-                    placeholder="Ÿ�ӽ����� (��: 01:23)"
+                    placeholder="타임스탬프 (예: 01:23)"
                     value={noteTimestamp}
                     onChange={(e) => setNoteTimestamp(e.target.value)}
                 />
                 <textarea
                     className="note-textarea"
                     rows="3"
-                    placeholder="�޸� ������ �Է��ϼ���"
+                    placeholder="메모 내용을 입력하세요"
                     value={noteContent}
                     onChange={(e) => setNoteContent(e.target.value)}
                 />
                 <button className="note-button" onClick={handleAddNote}>
-                    �޸� �߰�
+                    메모 추가
                 </button>
                 </div>
             </div>
             
-            {/* �߾� �г�: ���� �÷��̾� */}
             <div className="video-container">
               {loading ? (
-                <div className="loading-indicator">���� �ε� ��...</div>
+                <div className="loading-indicator">영상 로딩 중...</div>
               ) : (
                 <video 
                   ref={videoRef} 
@@ -268,26 +249,25 @@ function VideoTimelinePage() {
                   className="video-player"
                   src={videoUrl}
                 >
-                  �������� ������ �������� �ʽ��ϴ�.
+                  브라우저가 비디오를 지원하지 않습니다.
                 </video>
               )}
               
               {analysisData && (
                 <div className="video-summary">
-                  <h3>�׸� ���� ���</h3>
+                  <h3>그림 과정 요약</h3>
                   <p>{analysisData.objectiveSummary}</p>
                 </div>
               )}
             </div>
             
-            {/* ������ �г�: Ÿ�Ӷ��� */}
             <div className="timeline-container">
-              <h3 className="timeline-title">Ÿ�Ӷ���</h3>
+              <h3 className="timeline-title">타임라인</h3>
               
               {loading ? (
-                <div className="loading-indicator">Ÿ�Ӷ��� �ε� ��...</div>
+                <div className="loading-indicator">타임라인 로딩 중...</div>
                 ) : (timelineEvents.length === 0 && notes.length === 0) ? (
-                <div className="empty-timeline">Ÿ�Ӷ��� �̺�Ʈ�� �����ϴ�.</div>
+                <div className="empty-timeline">타임라인 이벤트가 없습니다.</div>
                 ) : (
                 <div className="timeline-events">
                     {notes.map((note, index) => (
@@ -322,7 +302,7 @@ function VideoTimelinePage() {
                                 }
                             }}
                             >
-                            {editingNoteId === note._id ? '�����ϱ�' : '�����ϱ�'}
+                            {editingNoteId === note._id ? '저장하기' : '수정하기'}
                             </button>
                         </div>
                         ))}

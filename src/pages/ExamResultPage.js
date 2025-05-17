@@ -15,6 +15,7 @@ function ExamResultPage() {
   const exam = location.state?.exam;
   const user = location.state?.user;
   const canvasRef = useRef(null);
+  const [eventButtons, setEventButtons] = useState([]);
 
   const [selectedIcon, setSelectedIcon] = useState(0);
   const [viewMode, setViewMode] = useState('event');
@@ -23,8 +24,16 @@ function ExamResultPage() {
   const iconButtons = ['🏠', '🌳', '👦', '👧'];
   const drawingTypes = ['house', 'tree', 'man', 'woman'];
   const IP_ADDR = process.env.REACT_APP_IP_ADDR;
-
+  
+  const eventLabelMap = {
+    thin: '얇은 선',
+    thick: '굵은 선',
+    slow: '느린선',
+    fast: '빠른선',
+    repeat: '반복선'
+  };
   // 선택된 버튼에 따라 서버에서 QnA 불러오기
+
   useEffect(() => {
     if (!exam?.id) return;
 
@@ -52,13 +61,20 @@ function ExamResultPage() {
     };
 
     const reconData = async () => {
-      try{
-        const {events, allStrokes, finalStrokes} = await getEventsAndStrokes(exam.id, drawingType);
-        console.log({"events" : events, "allStrokes" : allStrokes, "finalStrokes" : finalStrokes});
-      
-        
-        if(canvasRef.current) canvasRef.current.dispose();
+      try {
+        const { events, allStrokes, finalStrokes } = await getEventsAndStrokes(exam.id, drawingType);
+        console.log({ events, allStrokes, finalStrokes });
 
+        // 👉 eventButtons 만들기
+        const extractedEvents = new Set();
+        for (const ev of events?.eventStrokes || []) {
+          for (const e of ev.event || []) {
+            extractedEvents.add(e);
+          }
+        }
+        setEventButtons(Array.from(extractedEvents));
+
+        if (canvasRef.current) canvasRef.current.dispose();
         const canvas = new fabric.Canvas('c', {
           isDrawingMode: false,
           selection: false,
@@ -68,11 +84,12 @@ function ExamResultPage() {
         if (allStrokes?.strokes?.length) {
           await playTimelapse(canvas, allStrokes.strokes);
         }
-      
-      }catch(error){
+
+      } catch (error) {
         console.error('❌ strokes, events 불러오기 실패:', error);
       }
-    }
+    };
+
      
     fetchQnA();
     reconData();
@@ -143,9 +160,12 @@ function ExamResultPage() {
 
               {viewMode === 'event' ? (
                 <>
-                  {/* 기존 이벤트 목록 유지 */}
-                  <button className="behavior-item"><span className="behavior-icon">☰</span><span className="behavior-label">선 굵기 변화</span></button>
-                  <button className="behavior-item"><span className="behavior-icon">📌</span><span className="behavior-label">지우고 다시 그림</span></button>
+                  {eventButtons.map((eventType, index) => (
+                    <button key={index} className="behavior-item">
+                      <span className="behavior-icon">🎯</span>
+                      <span className="behavior-label">{eventLabelMap[eventType] || eventType}</span>
+                    </button>
+                  ))}
                 </>
               ) : (
                 questions.map((qa, index) => (
