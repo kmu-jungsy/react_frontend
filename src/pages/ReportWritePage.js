@@ -30,25 +30,100 @@ function ReportWritePage() {
   };
 
   const IP_ADDR = process.env.REACT_APP_IP_ADDR;
-  
+
+  const sectionKeys = {
+    house: ['Subject', 'Roof', 'Wall', 'Door', 'Window', 'Others'],
+    tree: ['Subject', 'Stem', 'Branch', 'Crown', 'Others'],
+    man: [
+      'Subject', 'GenderExpression', 'Head', 'Face', 'Torso',
+      'Arm', 'Leg', 'Hand', 'Foot', 'Others', 'Character'
+    ],
+    woman: [
+      'Subject', 'GenderExpression', 'Head', 'Face', 'Torso',
+      'Arm', 'Leg', 'Hand', 'Foot', 'Others', 'Character'
+    ]
+  };
+
+  const refTable = useRef({});
+
+  const populateFields = (data) => {
+    Object.keys(sectionKeys).forEach(section => {
+      sectionKeys[section].forEach((key, idx) => {
+        const exprRef = refTable.current[`${section}_${idx}_expr`];
+        const interpRef = refTable.current[`${section}_${idx}_interp`];
+        if (data[`${section}${key}`]) {
+          if (exprRef) exprRef.value = data[`${section}${key}`].expression;
+          if (interpRef) interpRef.value = data[`${section}${key}`].interpretation;
+        }
+      });
+    });
+  };
+
+  const collectReportData = () => {
+    const report = {};
+    Object.keys(sectionKeys).forEach(section => {
+      sectionKeys[section].forEach((key, idx) => {
+        const expr = refTable.current[`${section}_${idx}_expr`]?.value || '';
+        const interp = refTable.current[`${section}_${idx}_interp`]?.value || '';
+        report[`${section}${key}`] = { expression: expr, interpretation: interp };
+      });
+    });
+    return report;
+  };
+
+  const handleSave = async () => {
+    const payload = collectReportData();
+    try {
+      const response = await fetch(`${IP_ADDR}/htpReport/${exam.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(payload)
+      });
+      if (response.ok) {
+        alert('저장 성공');
+        const res = await fetch(`${IP_ADDR}/htpReport/${exam.id}`);
+        const newData = await res.json();
+        populateFields(newData);
+      } else {
+        const errorText = await response.text();
+        console.error('서버 응답 실패:', errorText);
+        alert('저장 실패: ' + errorText);
+      }
+    } catch (err) {
+      console.error('저장 요청 실패:', err);
+    }
+  };
+
   useEffect(() => {
     const fetchData = async () => {
       if (!exam?.id) return;
       try {
-        const res = await fetch(`${IP_ADDR}/htpReport/init/${exam.id}`);
-        const data = await res.json();
+        const checkRes = await fetch(`${IP_ADDR}/htpReport/check/${exam.id}`);
+        const exists = await checkRes.json();
+        if (!exists) {
+          await fetch(`${IP_ADDR}/htpReport/`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ testId: exam.id })
+          });
+        }
 
-        if (nameRef.current) nameRef.current.value = data.name;
-        if (genderRef.current) genderRef.current.value = data.gender;
-        if (testDateRef.current) testDateRef.current.value = data.testDate;
-        if (examinerRef.current) examinerRef.current.value = data.examiner;
-        if (reasonRef.current) reasonRef.current.value = data.reason;
-        if (backgroundRef.current) backgroundRef.current.value = data.background;
-        if (ssnRef.current && data.ssn) {
-          const ssn6 = data.ssn.slice(0, 6);  // 예: 990309
+        const initRes = await fetch(`${IP_ADDR}/htpReport/init/${exam.id}`);
+        const initData = await initRes.json();
+
+        if (nameRef.current) nameRef.current.value = initData.name;
+        if (genderRef.current) genderRef.current.value = initData.gender;
+        if (testDateRef.current) testDateRef.current.value = initData.testDate;
+        if (examinerRef.current) examinerRef.current.value = initData.examiner;
+        if (reasonRef.current) reasonRef.current.value = initData.reason;
+        if (backgroundRef.current) backgroundRef.current.value = initData.background;
+        if (ssnRef.current && initData.ssn) {
+          const ssn6 = initData.ssn.slice(0, 6);
           ssnRef.current.value = ssn6;
 
-          const yearPrefix = parseInt(ssn6.slice(0, 2), 10) < 25 ? 2000 : 1900; 
+          const yearPrefix = parseInt(ssn6.slice(0, 2), 10) < 25 ? 2000 : 1900;
           const birthYear = yearPrefix + parseInt(ssn6.slice(0, 2), 10);
           const birthMonth = parseInt(ssn6.slice(2, 4), 10);
           const birthDay = parseInt(ssn6.slice(4, 6), 10);
@@ -65,12 +140,16 @@ function ReportWritePage() {
           if (ageRef.current) ageRef.current.value = age;
         }
 
-        data.qna.forEach(item => {
+        initData.qna.forEach(item => {
           const ref = questionRefs[item.drawingType];
           if (ref?.current) {
             ref.current.value = item.questions.map(q => `Q: ${q.question}\nA: ${q.answer}`).join("\n\n");
           }
         });
+
+        const res = await fetch(`${IP_ADDR}/htpReport/${exam.id}`);
+        const data = await res.json();
+        populateFields(data);
       } catch (err) {
         console.error('보고서 데이터 불러오기 실패:', err);
       }
@@ -114,7 +193,7 @@ function ReportWritePage() {
           <div className="report-right-panel">
           <div className="report-header">
               <h2 className="report-title">HTP 검사 보고서</h2>
-              <button className="save-button">저장</button>
+              <button className="save-button" onClick={handleSave}>저장</button>
             </div>
             <div className="report-scrollable">
               
@@ -190,16 +269,31 @@ function ReportWritePage() {
                     </tr>
                 </thead>
                 <tbody>
-                    {['주제', '지붕', '벽', '문', '창문', '기타 요소'].map((item, idx) => (
+                  {['주제', '지붕', '벽', '문', '창문', '기타 요소'].map((item, idx) => (
                     <tr key={idx}>
-                        <td>{item}</td>
-                        <td style={{ width: '10%' }}>
-                        <input type="text" className="full-width-input" />
-                        </td>
-                        <td><textarea className="full-width-input" rows="2" /></td>
-                        <td><textarea className="full-width-input" rows="2" /></td>
+                      <td>{item}</td>
+                      <td style={{ width: '10%' }}>
+                        <input
+                          type="text"
+                          className="full-width-input"
+                        />
+                      </td>
+                      <td>
+                        <textarea
+                          className="full-width-input"
+                          rows="2"
+                          ref={(el) => (refTable.current[`house_${idx}_expr`] = el)}
+                        />
+                      </td>
+                      <td>
+                        <textarea
+                          className="full-width-input"
+                          rows="2"
+                          ref={(el) => (refTable.current[`house_${idx}_interp`] = el)}
+                        />
+                      </td>
                     </tr>
-                    ))}
+                  ))}
                 </tbody>
                 </table>
 
@@ -228,11 +322,28 @@ function ReportWritePage() {
                   <tbody>
                     {['주제', '줄기', '가지', '수관', '기타 요소'].map((item, idx) => (
                       <tr key={idx}>
-                        <td>{item}</td>
-                        <td><input type="text" className="full-width-input" /></td>
-                        <td><textarea className="full-width-input" rows="2" /></td>
-                        <td><textarea className="full-width-input" rows="2" /></td>
-                      </tr>
+                      <td>{item}</td>
+                      <td style={{ width: '10%' }}>
+                        <input
+                          type="text"
+                          className="full-width-input"
+                        />
+                      </td>
+                      <td>
+                        <textarea
+                          className="full-width-input"
+                          rows="2"
+                          ref={(el) => (refTable.current[`tree_${idx}_expr`] = el)}
+                        />
+                      </td>
+                      <td>
+                        <textarea
+                          className="full-width-input"
+                          rows="2"
+                          ref={(el) => (refTable.current[`tree_${idx}_interp`] = el)}
+                        />
+                      </td>
+                    </tr>
                     ))}
                   </tbody>
                 </table>
@@ -265,11 +376,28 @@ function ReportWritePage() {
                       '팔', '다리', '손', '발', '기타 요소', '그 밖의 인물'
                     ].map((item, idx) => (
                       <tr key={idx}>
-                        <td>{item}</td>
-                        <td><input type="text" className="full-width-input" /></td>
-                        <td><textarea className="full-width-input" rows="2" /></td>
-                        <td><textarea className="full-width-input" rows="2" /></td>
-                      </tr>
+                      <td>{item}</td>
+                      <td style={{ width: '10%' }}>
+                        <input
+                          type="text"
+                          className="full-width-input"
+                        />
+                      </td>
+                      <td>
+                        <textarea
+                          className="full-width-input"
+                          rows="2"
+                          ref={(el) => (refTable.current[`man_${idx}_expr`] = el)}
+                        />
+                      </td>
+                      <td>
+                        <textarea
+                          className="full-width-input"
+                          rows="2"
+                          ref={(el) => (refTable.current[`man_${idx}_interp`] = el)}
+                        />
+                      </td>
+                    </tr>
                     ))}
                   </tbody>
                 </table>
@@ -304,11 +432,28 @@ function ReportWritePage() {
                       '팔', '다리', '손', '발', '기타 요소', '그 밖의 인물'
                     ].map((item, idx) => (
                       <tr key={idx}>
-                        <td>{item}</td>
-                        <td><input type="text" className="full-width-input" /></td>
-                        <td><textarea className="full-width-input" rows="2" /></td>
-                        <td><textarea className="full-width-input" rows="2" /></td>
-                      </tr>
+                      <td>{item}</td>
+                      <td style={{ width: '10%' }}>
+                        <input
+                          type="text"
+                          className="full-width-input"
+                        />
+                      </td>
+                      <td>
+                        <textarea
+                          className="full-width-input"
+                          rows="2"
+                          ref={(el) => (refTable.current[`woman_${idx}_expr`] = el)}
+                        />
+                      </td>
+                      <td>
+                        <textarea
+                          className="full-width-input"
+                          rows="2"
+                          ref={(el) => (refTable.current[`woman_${idx}_interp`] = el)}
+                        />
+                      </td>
+                    </tr>
                     ))}
                   </tbody>
                 </table>

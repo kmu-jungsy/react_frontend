@@ -123,6 +123,7 @@ function VideoTimelinePage() {
     setVideoUrl(url);
 
     fetchNotes(exam.id, type);  
+    fetchGptEvents(exam.id, type);
     };
 
   useEffect(() => {
@@ -180,6 +181,21 @@ function VideoTimelinePage() {
     if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) age--;
     
     return `만 ${age}세`;
+  };
+
+  const fetchGptEvents = async (testId, drawingType) => {
+    try {
+      const response = await fetch(`${IP_ADDR}/gpt/get?&testId=${testId}&type=${drawingType}`);
+      if (response.ok) {
+        const json = await response.json();
+        const events = json.data?.[0]?.events || [];
+        setTimelineEvents(events);  // 타임라인에 표시할 events 저장
+      } else {
+        console.error("GPT 이벤트 불러오기 실패");
+      }
+    } catch (error) {
+      console.error("GPT 이벤트 요청 오류", error);
+    }
   };
 
 
@@ -270,43 +286,55 @@ function VideoTimelinePage() {
                 <div className="empty-timeline">타임라인 이벤트가 없습니다.</div>
                 ) : (
                 <div className="timeline-events">
-                    {notes.map((note, index) => (
-                        <div key={`note-${index}`} className="timeline-event note">
-                            <div className="note-content-wrapper">
-                            <div
-                                className="event-time"
-                                onClick={() => handleTimelineClick(note.timestamp)}
-                            >
-                                {note.timestamp}
-                            </div>
-                            <div className="event-icon">?</div>
-                            {editingNoteId === note._id ? (
-                                <textarea
-                                className="note-edit-textarea"
-                                value={editedContent}
-                                onChange={(e) => setEditedContent(e.target.value)}
-                                />
-                            ) : (
-                                <div className="event-description">{note.content}</div>
-                            )}
-                            </div>
+                  {timelineEvents.map((event, index) => (
+                    <div key={`gpt-${index}`} className="timeline-event">
+                      <div
+                        className="event-time"
+                        onClick={() => handleTimelineClick(event.video_timestamp)}
+                      >
+                        {event.video_timestamp}
+                      </div>
+                      <div className="event-icon">💡</div>
+                      <div className="event-description">{event.description}</div>
+                    </div>
+                  ))}
 
-                            <button
-                            className="note-edit-button"
-                            onClick={() => {
-                                if (editingNoteId === note._id) {
-                                handleUpdateNote(note._id);
-                                } else {
-                                setEditingNoteId(note._id);
-                                setEditedContent(note.content);
-                                }
-                            }}
-                            >
-                            {editingNoteId === note._id ? '저장하기' : '수정하기'}
-                            </button>
+                  {notes.map((note, index) => (
+                    <div key={`note-${index}`} className="timeline-event note">
+                      <div className="note-content-wrapper">
+                        <div
+                          className="event-time"
+                          onClick={() => handleTimelineClick(note.timestamp)}
+                        >
+                          {note.timestamp}
                         </div>
-                        ))}
+                        <div className="event-icon">📝</div>
+                        {editingNoteId === note._id ? (
+                          <textarea
+                            className="note-edit-textarea"
+                            value={editedContent}
+                            onChange={(e) => setEditedContent(e.target.value)}
+                          />
+                        ) : (
+                          <div className="event-description">{note.content}</div>
+                        )}
+                      </div>
 
+                      <button
+                        className="note-edit-button"
+                        onClick={() => {
+                          if (editingNoteId === note._id) {
+                            handleUpdateNote(note._id);
+                          } else {
+                            setEditingNoteId(note._id);
+                            setEditedContent(note.content);
+                          }
+                        }}
+                      >
+                        {editingNoteId === note._id ? '저장하기' : '수정하기'}
+                      </button>
+                    </div>
+                  ))}
                 </div>
                 )}
             </div>
