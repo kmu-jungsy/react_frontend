@@ -803,3 +803,14 @@
   font-size: 14px;
   box-sizing: border-box;
 }
+
+.report-action-buttons {
+  display: flex;
+  gap: 10px;
+  position: absolute;
+  right: 0;
+}
+
+.report-action-buttons .save-button {
+  position: static; /* 겹침 방지 */
+}

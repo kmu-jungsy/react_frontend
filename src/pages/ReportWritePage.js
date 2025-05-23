@@ -12,7 +12,10 @@ function ReportWritePage() {
   const exam = location.state?.exam;
   const user = location.state?.user;
   const [selectedIcon, setSelectedIcon] = useState(0);
+  const [drawingUrl, setDrawingUrl] = useState('');
   const iconButtons = ['🏠', '🌳', '👦', '👧'];
+  const drawingTypes = ['house', 'tree', 'man', 'woman'];
+  const drawingType = drawingTypes[selectedIcon];
 
   const nameRef = useRef();
   const genderRef = useRef();
@@ -51,10 +54,8 @@ function ReportWritePage() {
       sectionKeys[section].forEach((key, idx) => {
         const exprRef = refTable.current[`${section}_${idx}_expr`];
         const interpRef = refTable.current[`${section}_${idx}_interp`];
-        if (data[`${section}${key}`]) {
-          if (exprRef) exprRef.value = data[`${section}${key}`].expression;
-          if (interpRef) interpRef.value = data[`${section}${key}`].interpretation;
-        }
+        if (exprRef) exprRef.value = data[`${section}${key}`].expression;
+        if (interpRef) interpRef.value = data[`${section}${key}`].interpretation;
       });
     });
   };
@@ -69,6 +70,31 @@ function ReportWritePage() {
       });
     });
     return report;
+  };
+
+  const handleDraft = async () => {
+    const confirm = window.confirm('작성된 초안이 사라질 수 있습니다');
+    if (!confirm) return;
+
+    try {
+      await fetch(`${IP_ADDR}/emr-draft/auto-fill`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          testId: exam.id,
+          types: ['house', 'tree', 'man', 'woman']
+        })
+      });
+
+      const res = await fetch(`${IP_ADDR}/htpReport/${exam.id}`);
+      const data = await res.json();
+      populateFields(data);
+    } catch (error) {
+      console.error('초안 작성 실패:', error);
+      alert('초안 작성 중 오류가 발생했습니다.');
+    }
   };
 
   const handleSave = async () => {
@@ -97,11 +123,29 @@ function ReportWritePage() {
   };
 
   useEffect(() => {
+    const fetchDrawing = async () => {
+      try {
+        const res = await fetch(`${IP_ADDR}/image/download?testId=${exam.id}&type=${drawingType}`);
+        if (!res.ok) throw new Error('이미지 불러오기 실패');
+        const blob = await res.blob();
+        const imageUrl = URL.createObjectURL(blob);
+        setDrawingUrl(imageUrl);
+      } catch (err) {
+        console.error('이미지 로딩 오류:', err);
+        setDrawingUrl(''); // 에러 시 빈 그림
+      }
+    };
+
+    if (exam?.id) {
+      fetchDrawing();
+    }
+  }, [selectedIcon, exam?.id]);
+
+  useEffect(() => {
     const fetchData = async () => {
-      if (!exam?.id) return;
       try {
         const checkRes = await fetch(`${IP_ADDR}/htpReport/check/${exam.id}`);
-        const exists = await checkRes.json();
+        const { exists: exists } = await checkRes.json();
         if (!exists) {
           await fetch(`${IP_ADDR}/htpReport/`, {
             method: 'POST',
@@ -166,12 +210,11 @@ function ReportWritePage() {
 
       <div className="dashboard-body">
         <div className="main-area report-write-area">
-          {/* 왼쪽: 아이 정보 및 그림 */}
           <div className="report-left-panel">
             <img src={baby_profile} alt="baby_profile" className="side-profile" />
             <div className="side-name-age">
               <div className="name">{exam?.name}</div>
-              <div className="age">만 {exam?.birth}세</div>
+              <div className="age">생년월일 : {exam?.birth}</div>
             </div>
             <div className="icon-button-group">
               {iconButtons.map((icon, index) => (
@@ -185,16 +228,22 @@ function ReportWritePage() {
               ))}
             </div>
             <div className="drawing-container">
-              <img src={drawing} alt="그림" className="drawing-image" />
+              <img src={drawingUrl} alt="그림" className="drawing-image" />
             </div>
           </div>
 
-          {/* 오른쪽: HTP 검사 보고서 양식 */}
           <div className="report-right-panel">
           <div className="report-header">
-              <h2 className="report-title">HTP 검사 보고서</h2>
-              <button className="save-button" onClick={handleSave}>저장</button>
+            <h2 className="report-title">HTP 검사 보고서</h2>
+            <div className="report-action-buttons">
+              <button className="save-button" onClick={handleDraft}>
+                초안 작성
+              </button>
+              <button className="save-button" onClick={handleSave}>
+                저장
+              </button>
             </div>
+          </div>
             <div className="report-scrollable">
               
               <table className="htp-table">
