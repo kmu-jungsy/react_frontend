@@ -70,8 +70,11 @@ function ReportWritePage() {
       sectionKeys[section].forEach((key, idx) => {
         const exprRef = refTable.current[`${section}_${idx}_expr`];
         const interpRef = refTable.current[`${section}_${idx}_interp`];
-        if (exprRef) exprRef.value = data[`${section}${key}`].expression;
-        if (interpRef) interpRef.value = data[`${section}${key}`].interpretation;
+        const item = data[`${section}${key}`];
+        if (item) {
+          if (exprRef) exprRef.value = item.expression || '';
+          if (interpRef) interpRef.value = item.interpretation || '';
+        }
       });
     });
   };
@@ -303,7 +306,7 @@ function ReportWritePage() {
                       <img
                         src={familyTreeImages[selectedFamilyTreeIndex]}
                         alt={`가계도 ${selectedFamilyTreeIndex + 1}`}
-                        style={{ maxWidth: '100%', borderRadius: '8px', marginBottom: '8px' }}
+                        style={{ maxWidth: '50%', borderRadius: '8px', marginBottom: '8px' }}
                       />
                     )}
                     <button
