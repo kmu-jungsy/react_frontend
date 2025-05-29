@@ -2,7 +2,16 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import './DashboardPage.css';
-import drawing from '../assets/example_drawing.png';
+import family_tree1 from '../assets/family_tree1.png';
+import family_tree2 from '../assets/family_tree2.png';
+import family_tree3 from '../assets/family_tree3.png';
+import family_tree4 from '../assets/family_tree4.png';
+import family_tree5 from '../assets/family_tree5.png';
+import family_tree6 from '../assets/family_tree6.png';
+import family_tree7 from '../assets/family_tree7.png';
+import family_tree8 from '../assets/family_tree8.png';
+import family_tree9 from '../assets/family_tree9.png';
+import family_tree10 from '../assets/family_tree10.png';
 import baby_profile from '../assets/baby_profile.jpg';
 import logo from '../assets/logo.png';
 
@@ -16,6 +25,13 @@ function ReportWritePage() {
   const iconButtons = ['🏠', '🌳', '👦', '👧'];
   const drawingTypes = ['house', 'tree', 'man', 'woman'];
   const drawingType = drawingTypes[selectedIcon];
+
+  const familyTreeImages = [
+    family_tree1, family_tree2, family_tree3, family_tree4, family_tree5,
+    family_tree6, family_tree7, family_tree8, family_tree9, family_tree10
+  ];
+  const [showFamilyTreeSelector, setShowFamilyTreeSelector] = useState(false);
+  const [selectedFamilyTreeIndex, setSelectedFamilyTreeIndex] = useState(null);
 
   const nameRef = useRef();
   const genderRef = useRef();
@@ -282,7 +298,46 @@ function ReportWritePage() {
                     <td className="section-header" colSpan="4">FAMILY TREE</td>
                   </tr>
                   <tr>
-                    <td colSpan="4"><textarea className="full-width-input" rows="5"></textarea></td>
+                  <td colSpan="4">
+                    {selectedFamilyTreeIndex !== null && (
+                      <img
+                        src={familyTreeImages[selectedFamilyTreeIndex]}
+                        alt={`가계도 ${selectedFamilyTreeIndex + 1}`}
+                        style={{ maxWidth: '100%', borderRadius: '8px', marginBottom: '8px' }}
+                      />
+                    )}
+                    <button
+                      className="report-button"
+                      onClick={() => setShowFamilyTreeSelector(!showFamilyTreeSelector)}
+                      style={{ width: '200px' }}
+                    >
+                      가계도 입력하기
+                    </button>
+
+                    {showFamilyTreeSelector && (
+                      <div style={{ marginTop: '10px', display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
+                        {familyTreeImages.map((img, idx) => (
+                          <img
+                            key={idx}
+                            src={img}
+                            alt={`가계도 ${idx + 1}`}
+                            style={{
+                              width: '80px',
+                              height: '80px',
+                              objectFit: 'cover',
+                              cursor: 'pointer',
+                              border: selectedFamilyTreeIndex === idx ? '3px solid black' : '1px solid #ccc',
+                              borderRadius: '6px'
+                            }}
+                            onClick={() => {
+                              setSelectedFamilyTreeIndex(idx);
+                              setShowFamilyTreeSelector(false);
+                            }}
+                          />
+                        ))}
+                      </div>
+                    )}
+                  </td>
                   </tr>
                   <tr>
                     <td className="section-header" colSpan="4">요약 및 검사자의 견해</td>
