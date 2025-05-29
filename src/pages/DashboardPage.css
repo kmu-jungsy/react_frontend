@@ -814,3 +814,11 @@
 .report-action-buttons .save-button {
   position: static; /* 겹침 방지 */
 }
+
+.family-tree-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  margin: 10px 0;
+}

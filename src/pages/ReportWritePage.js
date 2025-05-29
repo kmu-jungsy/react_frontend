@@ -302,23 +302,25 @@ function ReportWritePage() {
                   </tr>
                   <tr>
                   <td colSpan="4">
-                    {selectedFamilyTreeIndex !== null && (
-                      <img
-                        src={familyTreeImages[selectedFamilyTreeIndex]}
-                        alt={`가계도 ${selectedFamilyTreeIndex + 1}`}
-                        style={{ maxWidth: '50%', borderRadius: '8px', marginBottom: '8px' }}
-                      />
-                    )}
-                    <button
-                      className="report-button"
-                      onClick={() => setShowFamilyTreeSelector(!showFamilyTreeSelector)}
-                      style={{ width: '200px' }}
-                    >
-                      가계도 입력하기
-                    </button>
+                    <div className="family-tree-section">
+                      {selectedFamilyTreeIndex !== null && (
+                        <img
+                          src={familyTreeImages[selectedFamilyTreeIndex]}
+                          alt={`가계도 ${selectedFamilyTreeIndex + 1}`}
+                          style={{ maxWidth: '50%', borderRadius: '8px' }}
+                        />
+                      )}
+                      <button
+                        className="report-button"
+                        onClick={() => setShowFamilyTreeSelector(!showFamilyTreeSelector)}
+                        style={{ width: '200px' }}
+                      >
+                        가계도 입력하기
+                      </button>
+                    </div>
 
                     {showFamilyTreeSelector && (
-                      <div style={{ marginTop: '10px', display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
+                      <div style={{ marginTop: '10px', display: 'flex', flexWrap: 'wrap', gap: '10px', justifyContent: 'center' }}>
                         {familyTreeImages.map((img, idx) => (
                           <img
                             key={idx}
